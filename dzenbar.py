@@ -23,58 +23,52 @@ class sensor_applet:
 		sensors.wait()
 		return "temp " + ret.split()[1]
 
-class mpd_applet:	# TODO buggy
+class mpd_applet:
 	def __init__(self, length = 30):
 		self.length = length
 		self.curr = ""
 		self.shiftL = False
-		self.paused = False
 		self.pauseMsg      = "[paused]"
 		self.notPlayingMsg = "[not playing]"
 	def show(self):
 		retStr = ""
 		ret = subprocess.check_output(shlex.split("mpc"))
-		isNotPlaying = lambda : len(ret.split('\n')) == 2
-		isPaused     = lambda : ret.split('\n')[1].split()[0] == "[paused]"
-		getSongInfo  = lambda : ret.split('\n')[0]
+		isNotPlaying = len(ret.split('\n')) == 2
+		isPaused     = ret.split('\n')[1].split()[0] == "[paused]"
+		songInfo    = ret.split('\n')[0]
 
-		if isNotPlaying():
+		if isNotPlaying:
 			return self.notPlayingMsg.center(self.length)
 
-		self.paused = isPaused()
-		song_info = getSongInfo()
-		if len(song_info) > self.length:
-			# shift the string
-			if self.curr and self.curr in song_info:
-				idx = song_info.index(self.curr)
-				LIdx = idx              	# Left  index
-				RIdx = self.length + idx	# Right index
-				if isPaused(): RIdx -= len(self.pauseMsg)
+		LIdx = 0
+		if self.curr in songInfo:
+			LIdx = songInfo.index(self.curr)
+		RIdx = self.length + LIdx
+		if isPaused:
+			RIdx -= len(self.pauseMsg)
 
-				if LIdx == 0:
-					self.shiftL = False
-				elif RIdx == len(song_info):
-					self.shiftL = True
+		if len(songInfo) > self.length or \
+		   (isPaused and ((len(songInfo) + len(self.pauseMsg)) > self.length)) or \
+		   LIdx != 0:
+			# need shift
+			if LIdx == 0:
+				self.shiftL = False
+			elif RIdx >= len(songInfo):
+				self.shiftL = True
 
-				if self.shiftL:
-					self.curr = song_info[LIdx-1:RIdx-1]
-				else:
-					self.curr = song_info[LIdx+1:RIdx+1]
-				retStr = self.curr
-				if isPaused(): retStr = self.curr + self.pauseMsg
+			if self.shiftL:
+				self.curr = songInfo[LIdx-1:RIdx-1]
 			else:
-				# new track
-				print "<newTrack!>"
-				RIdx = self.length	# Right index
-				if isPaused(): RIdx -= len(self.pauseMsg)
-				self.curr = song_info[:RIdx]
-				retStr = self.curr
-				if isPaused(): retStr = self.curr + self.pauseMsg
-		else:
-			self.curr = song_info
+				self.curr = songInfo[LIdx+1:RIdx+1]
 			retStr = self.curr
-		print retStr.center(self.length)
-		return retStr.center(self.length)
+			if isPaused: retStr = self.curr + self.pauseMsg
+		else:
+			# no need to shift
+			self.curr = songInfo[LIdx:RIdx]
+			retStr = self.curr
+			if isPaused: retStr += self.pauseMsg
+
+		return retStr.ljust(self.length)
 
 class num_applet:
 	def __init__(self):
@@ -102,6 +96,6 @@ if __name__ == "__main__":
 	cmd = "dzen2 -u -x 0 -y 800"
 	proc = subprocess.Popen(shlex.split(cmd), stdin=subprocess.PIPE)
 	bar = bar(stdin = proc.stdin)
-	while 1:
+	while True:
 		bar.show()
 		time.sleep(1)
