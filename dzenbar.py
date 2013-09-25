@@ -92,7 +92,7 @@ class bar:
         self.stdin.write(self.sep.join(showlst) + "\n")
 
 if __name__ == "__main__":
-    cmd = "dzen2 -u -x 0 -y 800"
+    cmd = "dzen2 -u -x 0 -y 800 -e --"
     proc = subprocess.Popen(shlex.split(cmd), stdin=subprocess.PIPE)
     bar = bar(stdin = proc.stdin)
     while True:
