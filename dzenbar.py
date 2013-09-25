@@ -1,20 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 #
 # depends on: dzen2, sensors, mpc
-#
-# todo
-#   click destro su dzen uccide
-#   mpd applet: renderlo piu performante senza pollare ogni secondo
-#               same as per uptime applet
 
 import subprocess, shlex, time, sys
 
 class uptime_applet:
     def show(self):
         ret = subprocess.check_output("uptime")
-        # TODO bug if uptime returns
-        # 11:58:50 up 49 min,  2 users,  load average: 0,62, 0,55, 0,49
-        return "uptime " + ret.split()[2][:-1]
+        return "uptime " + ret.split(',')[0].split("up")[-1].strip()
 
 class sensor_applet:
     def show(self):
