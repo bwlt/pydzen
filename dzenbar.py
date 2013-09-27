@@ -4,6 +4,20 @@
 
 import subprocess, shlex, time, sys
 
+def color(color, string, bg=False):
+
+    def color_fg():
+        return "^fg(" + color + ")" + string + "^fg()"
+
+    def color_bg():
+        return "^bg(" + color + ")" + string + "^bg()"
+
+    if bg:
+        return color_bg()
+    else:
+        return color_fg()
+
+
 class uptime_applet:
     def show(self):
         ret = subprocess.check_output("uptime")
